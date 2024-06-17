@@ -13,7 +13,9 @@
 				"dan-c-underwood.arm",
 				"ms-vscode.hexeditor",
 				"marus25.cortex-debug",
-				"mcu-debug.debug-tracker-vscode"
+				"mcu-debug.debug-tracker-vscode",
+				"trond-snekvik.gnu-mapfiles",
+				"amapleaf.linker-script"
 			]
 		}
 	}

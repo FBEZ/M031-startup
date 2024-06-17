@@ -1,20 +1,38 @@
-all: main.bin
+include ./makefile.conf
+NAME=startup
 
-main.o: main.S 
-	arm-none-eabi-as -mthumb -o main.o main.S -g
+#STARTUP_DEFS=-D__STARTUP_CLEAR_BSS -D__START=main
 
-main.elf: main.o
-	arm-none-eabi-ld -Ttext 0x0000000 main.o -o main.elf 
-   
-main.bin: main.elf 
-	arm-none-eabi-objcopy -S -O binary main.elf main.bin
-	arm-none-eabi-size main.elf
+# Need following option for LTO as LTO will treat retarget functions as
+# unused without following option
+CFLAGS += -fno-builtin 
+CFLAGS += -D ARM_MATH_CM$(CORTEX_M)
 
-flash: main.bin
-	(echo "flash write_image main.bin"; echo "quit") | telnet host.docker.internal 4444
+LDSCRIPTS=-L. -T gcc_arm.ld
 
-debug: main.elf
-	gdb-multiarch -iex "set auto-load safe-path ." ./main.elf
+LFLAGS=$(USE_NANO) $(USE_NOHOST) $(LDSCRIPTS) $(GC) $(MAP) 
 
-clean: 
-	rm main.elf main.o main.bin
+startup: startup.o startup.s
+	$(CC) *.o $(CFLAGS) $(LFLAGS)  -g -o $@.elf 
+# $(STARTUP)
+
+startup.s: startup.c
+	$(CC) $^ $(CFLAGS) $(LFLAGS) -S 
+startup.o: startup.c
+	$(CC) $^ $(CFLAGS) $(LFLAGS) -c -o startup.o -g
+
+
+.PHONY: clean debug flash 
+# flash:
+# 	openocd -f ../scripts/interface/nulink.cfg -f ../scripts/target/numicroM$(CORTEX_M).cfg -c "init" -c "reset halt" -c "flash write_image erase Objects/$(NAME).bin 0x00000000" -c "reset" -c "exit"
+
+clean:
+	rm *.o 
+	rm *.s
+	rm *.elf
+	rm *.map
+
+debug:
+	gdb-multiarch -iex "set auto-load safe-path ." $(NAME).elf
+
+
