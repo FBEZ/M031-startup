@@ -14,12 +14,10 @@
 	.section	.isr_vector_sec,"aw"
 	.align	2
 	.type	isr_vector, %object
-	.size	isr_vector, 16
+	.size	isr_vector, 8
 isr_vector:
-	.word	536871168
-	.word	256
-	.word	513
-	.word	770
+	.word	__StackTop
+	.word	__ResetHandlerSectionStart
 	.section	.reset_handler_sec,"ax",%progbits
 	.align	1
 	.global	reset_handler
@@ -30,19 +28,23 @@ isr_vector:
 	.fpu softvfp
 	.type	reset_handler, %function
 reset_handler:
-	@ Naked Function: prologue and epilogue provided by programmer.
-	@ args = 0, pretend = 0, frame = 0
+	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 1, uses_anonymous_args = 0
-	.syntax divided
-@ 5 "startup.c" 1
-	loop: 
-	 ADD R0, R0, #1 
-	 ADD R1, R1, #5
-	 b loop
-	
-@ 0 "" 2
-	.thumb
-	.syntax unified
-	nop
+	push	{r7, lr}
+	sub	sp, sp, #8
+	add	r7, sp, #0
+	movs	r3, #0
+	str	r3, [r7, #4]
+	movs	r3, #2
+	str	r3, [r7]
+.L2:
+	ldr	r3, [r7, #4]
+	adds	r3, r3, #1
+	str	r3, [r7, #4]
+	ldr	r2, [r7]
+	ldr	r3, [r7, #4]
+	adds	r3, r2, r3
+	str	r3, [r7]
+	b	.L2
 	.size	reset_handler, .-reset_handler
 	.ident	"GCC: (15:10.3-2021.07-4) 10.3.1 20210621 (release)"
