@@ -9,14 +9,35 @@ ENTRY(reset_handler)
 
 SECTIONS
 {
-  .isr_vector_sec 0x00000000 : ALIGN(2)
-  {
-    KEEP(*(.isr_vector_sec)) /* keep my variable even if not referenced */
-  } > FLASH
-  __ResetHandlerSectionStart = .;
-  .reset_handler_sec : ALIGN(2)
-  {
-    KEEP(*(.reset_handler_sec)) /* keep my variable even if not referenced */
-  } > FLASH
+  .text 0x00000000 :
+	{
+		KEEP(*(.isr_vector_sec))
+		__ResetHandlerSectionStart = .;
+    	KEEP(*(.reset_handler_sec))
+		*(.text*)
+		KEEP(*(.init))
+		KEEP(*(.fini))
+		*(.rodata*)
+	} > FLASH
+
+	__etext = .;
+	__text_end__ = .;
+	.data : AT (__etext)
+	{
+		__data_start__ = .;
+		*(vtable)
+		*(.data*)
+		__data_end__ = .;
+	}> RAM
+	.bss :
+	{
+		. = ALIGN(4);
+		__bss_start__ = .;
+		*(.bss*)
+		*(COMMON)
+		. = ALIGN(4);
+		__bss_end__ = .;
+	} > RAM
+
   __StackTop = ORIGIN(RAM) + LENGTH(RAM);
 }

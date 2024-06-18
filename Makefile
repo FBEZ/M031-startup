@@ -1,5 +1,5 @@
 include ./makefile.conf
-NAME=startup
+NAME=project
 
 #STARTUP_DEFS=-D__STARTUP_CLEAR_BSS -D__START=main
 
@@ -12,15 +12,16 @@ LDSCRIPTS=-L. -T gcc_arm.ld
 
 LFLAGS=$(USE_NANO) $(USE_NOHOST) $(LDSCRIPTS) $(GC) $(MAP) 
 
-startup: startup.o startup.s
+$(NAME): startup.o main.o
 	$(CC) *.o $(CFLAGS) $(LFLAGS)  -g -o $@.elf 
 # $(STARTUP)
 
-startup.s: startup.c
-	$(CC) $^ $(CFLAGS) $(LFLAGS) -S 
+# startup.s: startup.c
+# 	$(CC) $^ $(CFLAGS) $(LFLAGS) -S 
 startup.o: startup.c
 	$(CC) $^ $(CFLAGS) $(LFLAGS) -c -o startup.o -g
-
+main.o: main.c 
+	$(CC) $^ $(CFLAGS) $(LFLAGS) -c -o $@ -g
 
 .PHONY: clean debug flash 
 # flash:
